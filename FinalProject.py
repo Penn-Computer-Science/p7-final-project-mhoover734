@@ -194,7 +194,7 @@ def make_right_0():
         "00adce000",
         "00adcb000",
         "000dcb000",
-        "000bdcf00",
+        "000bdc000",
         "000bdcf00",
         "000bbfb00",
         "000ebe000",
@@ -269,7 +269,7 @@ def make_left_0():
         "000ecd000",
         "000bcd000",
         "000bcd000",
-        "00fcdb000",
+        "000cdb000",
         "00fcdb000",
         "00bfbb000",
         "000ebe000",
@@ -341,6 +341,73 @@ def make_attack():
         "0cc000000l0",
         "000cddeel00"]
     return draw_pattern(pattern, 12)
+def make_room():
+        "114444444444444444444444444444444444444444444444433344444499999999944444411"
+        "114444444444444444444444444444444444444444444444433344444990090099944444411"
+        "114444444444444444444444444444444444444444444444433344449900900999944444411"
+        "114444444444444444444444444444444444444444444444433344499999999990944444411"
+        "114444444444444444444444444444444444444444444444433344499000009900944444411"
+        "114444444444444444444444444444444444444444444444433322290009000909877782211"
+        "114444444444444444444444444444444444444444444444433222290009000990788888211"
+        "114444444444444444444444444444444444444444444444433266690999990900780908611"
+        "114444444444444444444444444444444444444444444444432666590009000909789998611"
+        "114444444444444444444444444444444444444444444444432665588809000999880908611"
+        "114444444444444444444444444444444444444444444444426655898800009996588888511"
+        "112222222222222222222222222222222222222222222222226555809899999965555555511"
+        "112222222222222222222222222222222222222222222222265555888655555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "115555555555555555555555555555555555555555555555555555555555555555555555511"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "116666666666666666666666666666666666666666666666666666666666666666666666611"
+        "111111111111111111111111111111111111111111111111111111111111111111111111111"
+        "111111111111111111111111111111111111111111111111111111111111111111111111111"
+    ]
+    room_colors = [
+        "#7F655B", # lightest brown
+        "#000000", # outer trim
+        "#6f3198", # wall trim
+        "#764099", # that one wall
+        "#8a5cab", # main back walls
+        "#341947", # main floor
+        "#4d4d4d", # shaded floor
+        "#575757", # darkest brown
+        "#1a1a1a", # darkish brown
+        "#edd4c5"] # lightish brown
+
+    room_scale = 12
+    h = len(pattern)*room_scale
+    w = len(pattern[0])*room_scale
+    img = tk.PhotoImage(width=w, height=h)
+    for y in range(h):
+        for x in range(w):
+            img.put(room_colors[int(pattern[y//room_scale][x//room_scale])], (x,y))
+    return img
+
 
 player_up_0=make_up_0()
 player_up_1=make_up_1()
@@ -355,11 +422,13 @@ player_left_0=make_left_0()
 player_left_1=make_left_1()
 player_left_2=make_left_2()
 
-current_player_sprite = ("down", 0)
-player_sprite_list = {"up": (player_up_0, player_up_1, player_up_2),
-                      "down": (player_down_0, player_down_1, player_down_2),
-                      "right": (player_right_0, player_right_1, player_right_2),
-                      "left": (player_left_0, player_left_1, player_left_2)}
+room = make_room()
+
+current_player_sprite = ("down", 2)
+player_sprite_list = {"up": (player_up_0, player_up_1, player_up_0, player_up_2),
+                      "down": (player_down_0, player_down_1, player_down_0, player_down_2),
+                      "right": (player_right_0, player_right_1, player_right_0, player_right_2),
+                      "left": (player_left_0, player_left_1, player_left_0, player_left_2)}
 
 attack_sprite=make_attack()
 
@@ -371,42 +440,61 @@ attack_sprite=make_attack()
 movement = {'up': 0,'down': 0,'right': 0,'left': 0}
 #keys_pressed = {'w': False,'s': False,'d': False,'a': False}
 
-def move_pressed(event, direction):
+def change_movement(event, direction, state):
     global movement
-    movement[direction] = 1
+    movement[direction] = state
 
-def stop_movement(event, direction):
-    global movement
-    movement[direction] = 0
-
+stall = False
 def sprite_animation(direction):
-    if current_player_sprite[0] != direction
+    global current_player_sprite
+    if current_player_sprite[0] != direction:
+        current_player_sprite = (direction, 0)
+        canvas.itemconfig(player, image=player_sprite_list[direction][0])
+    else:
+        current_player_sprite = (direction, (current_player_sprite[1]+1)%4)
+        canvas.itemconfig(player, image=player_sprite_list[direction][current_player_sprite[1]])
+        
 
 move_distance = 12
 def update_player():
-    canvas.move(player, (movement['right']-movement['left'])*move_distance, (movement['down'] - movement['up'])*move_distance)
-    if movement['right']-movement['left'] == 1: #moving right
+    global current_player_sprite
+    player_pos = canvas.bbox(player)
+    moved = {"horizontally": False, "vertically": False}
+    predicted_x = player_pos[0] + (movement['right']-movement['left'])*move_distance
+    predicted_y = player_pos[1] + (movement['down'] - movement['up'])*move_distance
+    if predicted_x > 0 and predicted_x < 792:
+        canvas.move(player, (movement['right']-movement['left'])*move_distance, 0) #moves the player horizontally
+        moved["horizontally"] = True #states the player has possibly moved horizontally
+    if predicted_y > 0 and predicted_y < 330:
+        canvas.move(player, 0, (movement['down'] - movement['up'])*move_distance) #moves the player vertically
+        moved["vertically"] = True #states the player has possibly moved vertically
+    
+    #moved = True
+    if movement['right']-movement['left'] == 1 and moved["horizontally"] == True: #moving right
         sprite_animation("right")
-    elif movement['right']-movement['left'] == -1: #moving left
-        pass
-    elif movement['down'] - movement['up'] == 1: #moving down
-        pass
-    elif movement['down'] - movement['up'] == -1: #moving up
-        pass
+    elif movement['right']-movement['left'] == -1 and moved["horizontally"] == True: #moving left
+        sprite_animation("left")
+    elif movement['down']-movement['up'] == 1 and moved["vertically"] == True: #moving down
+        sprite_animation("down")
+    elif movement['down']-movement['up'] == -1 and moved["vertically"] == True: #moving up
+        sprite_animation("up")
+    else:
+        current_player_sprite = (current_player_sprite[0], 0)
+        canvas.itemconfig(player, image=player_sprite_list[current_player_sprite[0]][0])
 
     
 
 
-root.bind("w", lambda event: move_pressed(event, 'up'))
-root.bind("s", lambda event: move_pressed(event, 'down'))
-root.bind("d", lambda event: move_pressed(event, 'right'))
-root.bind("a", lambda event: move_pressed(event, 'left'))
-root.bind("<KeyRelease-w>", lambda event: stop_movement(event, 'up'))
-root.bind("<KeyRelease-s>", lambda event: stop_movement(event, 'down'))
-root.bind("<KeyRelease-d>", lambda event: stop_movement(event, 'right'))
-root.bind("<KeyRelease-a>", lambda event: stop_movement(event, 'left'))
+root.bind("w", lambda event: change_movement(event, 'up', 1))
+root.bind("s", lambda event: change_movement(event, 'down', 1))
+root.bind("d", lambda event: change_movement(event, 'right', 1))
+root.bind("a", lambda event: change_movement(event, 'left', 1))
+root.bind("<KeyRelease-w>", lambda event: change_movement(event, 'up', 0))
+root.bind("<KeyRelease-s>", lambda event: change_movement(event, 'down', 0))
+root.bind("<KeyRelease-d>", lambda event: change_movement(event, 'right', 0))
+root.bind("<KeyRelease-a>", lambda event: change_movement(event, 'left', 0))
 
-delay = 50
+delay = 100
 timer = 0
 def game_loop():
     global timer
@@ -419,8 +507,9 @@ def game_loop():
 
 
 def start():
-    global player
-    player = canvas.create_image(WIDTH//2,HEIGHT//2, image=player_down_0, anchor = 's')
+    global player, room
+    room = canvas.create_image(0, 0, image=room, anchor = 'nw')
+    player = canvas.create_image(420, 240, image=player_down_0, anchor = 'nw')
     game_loop()
 def reset():
     canvas.delete("all")
