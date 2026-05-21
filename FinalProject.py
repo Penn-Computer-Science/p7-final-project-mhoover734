@@ -331,7 +331,7 @@ def make_left_2():
         "0000gg000",
         "000000000"]
     return draw_pattern(pattern, 12)
-def make_attack():
+def make_attack(rotation):
     pattern = [
         "0b000000000",
         "00bc0000ll0",
@@ -340,7 +340,18 @@ def make_attack():
         "b00ccddee00",
         "0cc000000l0",
         "000cddeel00"]
-    return draw_pattern(pattern, 12)
+    scale = 12
+    h = len(pattern)*scale
+    if rotation in ("up", "down"):
+        img = tk.PhotoImage(width=len(pattern[0])*scale, height=len(pattern)*scale)
+    else:
+        img = tk.PhotoImage(width=len(pattern)*scale, height=len(pattern[0])*scale)
+    for y in range(len(pattern)*scale):
+        for x in range(len(pattern[0])*scale):
+            if pattern[y//scale][x//scale] != "0":
+                drawing_style = {"down": (x,y),"up": (x,h-y),"left": (h-y,x),"right": (y,x)}
+                img.put(colors[ord(pattern[y//scale][x//scale])-97], drawing_style[rotation])
+    return img
 def make_room():
     pattern = [
         "111111111111111111111111111111111111111111111111111111111111111111111111111",
@@ -415,39 +426,27 @@ def make_room():
             img.put(room_colors[int(pattern[y//room_scale][x//room_scale])], (x,y))
     return img
 
+attack_sprite_up=make_attack("up")
+attack_sprite_down=make_attack("down")
+attack_sprite_left=make_attack("left")
+attack_sprite_right=make_attack("right")
 
-player_up_0=make_up_0()
-player_up_1=make_up_1()
-player_up_2=make_up_2()
-player_down_0=make_down_0()
-player_down_1=make_down_1()
-player_down_2=make_down_2()
-player_right_0=make_right_0()
-player_right_1=make_right_1()
-player_right_2=make_right_2()
-player_left_0=make_left_0()
-player_left_1=make_left_1()
-player_left_2=make_left_2()
-
-attack_sprite=make_attack()
 room_img=make_room()
 
 current_player_sprite = ("down", 2)
-player_sprite_list = {"up": (player_up_0, player_up_1, player_up_0, player_up_2),
-                      "down": (player_down_0, player_down_1, player_down_0, player_down_2),
-                      "right": (player_right_0, player_right_1, player_right_0, player_right_2),
-                      "left": (player_left_0, player_left_1, player_left_0, player_left_2)}
-
-#canvas.itemconfig(player, image=player_down_1)
+player_sprite_list = {"up": (make_up_0(), make_up_1(), make_up_0(), make_up_2()),
+                      "down": (make_down_0(), make_down_1(), make_down_0(), make_down_2()),
+                      "right": (make_right_0(), make_right_1(), make_right_0(), make_right_2()),
+                      "left": (make_left_0(), make_left_1(), make_left_0(), make_left_2())}
 
 movement = {'up': 0,'down': 0,'right': 0,'left': 0}
-#keys_pressed = {'w': False,'s': False,'d': False,'a': False}
+
 
 def change_movement(event, direction, state):
     global movement
     movement[direction] = state
 
-stall = False
+
 def sprite_animation(direction):
     global current_player_sprite
     if current_player_sprite[0] != direction:
@@ -457,22 +456,20 @@ def sprite_animation(direction):
         current_player_sprite = (direction, (current_player_sprite[1]+1)%4)
         canvas.itemconfig(player, image=player_sprite_list[direction][current_player_sprite[1]])
         
-
+movement_locked = 0
 move_distance = 12
 def update_player():
-    global current_player_sprite
+    global current_player_sprite, movement_locked
     player_pos = canvas.bbox(player)
     moved = {"horizontally": False, "vertically": False}
     predicted_x = player_pos[0] + (movement['right']-movement['left'])*move_distance
     predicted_y = player_pos[1] + (movement['down'] - movement['up'])*move_distance
-    if predicted_x > 12 and predicted_x < 780:
+    if predicted_x > 12 and predicted_x < 780 and movement_locked == 0:
         canvas.move(player, (movement['right']-movement['left'])*move_distance, 0) #moves the player horizontally
         moved["horizontally"] = True #states the player has possibly moved horizontally
-    if predicted_y > 0 and predicted_y < 318:
+    if predicted_y > 0 and predicted_y < 318 and movement_locked == 0:
         canvas.move(player, 0, (movement['down'] - movement['up'])*move_distance) #moves the player vertically
         moved["vertically"] = True #states the player has possibly moved vertically
-    
-    #moved = True
     if movement['right']-movement['left'] == 1 and moved["horizontally"] == True: #moving right
         sprite_animation("right")
     elif movement['right']-movement['left'] == -1 and moved["horizontally"] == True: #moving left
@@ -484,9 +481,28 @@ def update_player():
     else:
         current_player_sprite = (current_player_sprite[0], 0)
         canvas.itemconfig(player, image=player_sprite_list[current_player_sprite[0]][0])
+    if movement_locked != 0:
+        movement_locked -= 1
 
-    
+def reset(event):
+    canvas.delete("all")
+    start()
 
+def attack(event):
+    global movement_locked
+    if movement_locked != 0:
+        return
+    movement_locked = 3
+    player_pos = canvas.bbox(player)
+    print(player_pos) #debug
+    if current_player_sprite[0] == "up": #:down_arrow: START WORK HERE ----------------------------------------------------------------------------------------------------------
+        attack = canvas.create_image(player_pos[0], player_pos[1], image=attack_sprite_up, anchor = "center")
+    elif current_player_sprite[0] == "down":
+        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_down, anchor = "center")
+    elif current_player_sprite[0] == "left":
+        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_left, anchor = "center")
+    else: #right
+        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_right, anchor = "center")
 
 root.bind("w", lambda event: change_movement(event, 'up', 1))
 root.bind("s", lambda event: change_movement(event, 'down', 1))
@@ -496,8 +512,11 @@ root.bind("<KeyRelease-w>", lambda event: change_movement(event, 'up', 0))
 root.bind("<KeyRelease-s>", lambda event: change_movement(event, 'down', 0))
 root.bind("<KeyRelease-d>", lambda event: change_movement(event, 'right', 0))
 root.bind("<KeyRelease-a>", lambda event: change_movement(event, 'left', 0))
+root.bind("r", reset)
+root.bind("<space>", attack)
 
-delay = 100
+
+delay = 80
 timer = 0
 def game_loop():
     global timer
@@ -505,20 +524,14 @@ def game_loop():
     #move_enemies() #move all enemies
     #check_collisions() #check out new collisions
     update_player()
-    #print(keys_pressed)
-    root.after(delay, game_loop) #every [delay], run game_loop (24ms default)
+    root.after(delay, game_loop) #every [delay], run game_loop
 
 
 def start():
     global player, room
-    #room = canvas.create_image(WIDTH//2, HEIGHT//2, image=room_img, anchor = 'center')
     room = canvas.create_image(0, 0, image=room_img, anchor = 'nw')
-    player = canvas.create_image(420, 240, image=player_down_0, anchor = 'nw')
-    game_loop()
-def reset():
-    canvas.delete("all")
-    #enemies.clear()
-    start()
-reset()
-
+    player = canvas.create_image(420, 240, image=player_sprite_list["down"][0], anchor = 'nw')
+    
+start()
+game_loop()
 root.mainloop()
