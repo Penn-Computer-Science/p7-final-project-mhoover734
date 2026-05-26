@@ -357,7 +357,7 @@ def make_room():
     pattern = [
         "111111111111111111111111111111111111111111111111111111111111111111111111111",
         "111111111111111111111111111111111111111111111111111111111111111111111111111",
-        "114444444444444444444444444444444444444444444444433344444444444444444444411",
+        "111111111111111111111111111111111111111111111111111111111111111111111111111",
         "114444444444444444444444444444444444444444444444433344444444444444444444411",
         "114444444444444444444444444444444444444444444444433344444444444444444444411",
         "114444444444444444444444444444444444444444444444433344444444444444444444411",
@@ -459,8 +459,11 @@ def sprite_animation(direction):
 
 movement_locked = 0
 move_distance = 12
+stamina = 100
 def update_player():
-    global current_player_sprite, movement_locked
+    global current_player_sprite, movement_locked, stamina
+    if stamina <= 100-4:
+        stamina += 4
     player_pos = canvas.bbox(player)
     moved = {"horizontally": False, "vertically": False}
     predicted_x = player_pos[0] + (movement['right']-movement['left'])*move_distance
@@ -468,9 +471,14 @@ def update_player():
     if predicted_x > 12 and predicted_x < 780 and movement_locked == 0:
         canvas.move(player, (movement['right']-movement['left'])*move_distance, 0) #moves the player horizontally
         moved["horizontally"] = True #states the player has possibly moved horizontally
-    if predicted_y > 0 and predicted_y < 318 and movement_locked == 0:
+    if predicted_y > 12 and predicted_y < 318 and movement_locked == 0:
         canvas.move(player, 0, (movement['down'] - movement['up'])*move_distance) #moves the player vertically
         moved["vertically"] = True #states the player has possibly moved vertically
+    print(f"Vert: {moved["vertically"]}   Hori: {moved["horizontally"]}")
+    if ((moved["horizontally"] and movement['right']-movement['left'] != 0) or (moved["vertically"] and movement['down']-movement['up'] != 0)) and move_distance == 24:
+        stamina -= 8 #Above is the check to make sure the player is moving and running
+        if stamina <= 0: #If stam hits 0 from above drain, lock movement for 10 frames
+            movement_locked = 10
     if movement['right']-movement['left'] == 1 and moved["horizontally"] == True: #moving right
         sprite_animation("right")
     elif movement['right']-movement['left'] == -1 and moved["horizontally"] == True: #moving left
@@ -499,13 +507,14 @@ def change_run(event, starting):
         move_distance = 12
 
 def attack(event):
-    global movement_locked
+    global movement_locked, attack
     if movement_locked != 0:
         return
-    movement_locked = 3
+    movement_locked = 4
     player_pos = canvas.bbox(player)
     if current_player_sprite[0] == "up":
-        attack = canvas.create_image(player_pos[0]-24, player_pos[1]+47, image=attack_sprite_up, anchor = "sw")
+        attack = canvas.create_image(player_pos[0]-24, player_pos[1]+59+12, image=attack_sprite_up, anchor = "sw")
+        canvas.tag_raise(player)
     elif current_player_sprite[0] == "down":
         attack = canvas.create_image(player_pos[0]-24, player_pos[3]-60, image=attack_sprite_down, anchor = "nw")
     elif current_player_sprite[0] == "left":
@@ -534,8 +543,7 @@ root.bind("<KeyRelease-Shift_L>", lambda event: change_run(event, 0))
 root.bind("r", reset)
 root.bind("<space>", attack)
 
-
-delay = 800
+delay = 80
 timer = 0
 def game_loop():
     global timer
@@ -544,13 +552,18 @@ def game_loop():
     #check_collisions() #check out new collisions
     update_player()
     root.after(delay, game_loop) #every [delay], run game_loop
+    print(stamina)
+    if movement_locked == 0:
+        canvas.delete(attack)
+    canvas.coords(stamina_bar, 84, 10, 84+stamina*2, 26)
 
 
 def start():
-    global player, room
+    global player, stamina_bar
     room = canvas.create_image(0, 0, image=room_img, anchor = 'nw')
     player = canvas.create_image(420, 240, image=player_sprite_list["down"][0], anchor = 'nw')
-
+    stamina_label = canvas.create_text(26, 18, text="Stamina:", fill="white", anchor = "w")
+    stamina_bar = canvas.create_rectangle(84, 10, 84+stamina*2, 26, fill="blue")
 start()
 game_loop()
 root.mainloop()
