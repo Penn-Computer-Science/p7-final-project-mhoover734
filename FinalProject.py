@@ -342,6 +342,7 @@ def make_attack(rotation):
         "000cddeel00"]
     scale = 12
     h = len(pattern)*scale
+    w = len(pattern[0])*scale
     if rotation in ("up", "down"):
         img = tk.PhotoImage(width=len(pattern[0])*scale, height=len(pattern)*scale)
     else:
@@ -349,7 +350,7 @@ def make_attack(rotation):
     for y in range(len(pattern)*scale):
         for x in range(len(pattern[0])*scale):
             if pattern[y//scale][x//scale] != "0":
-                drawing_style = {"down": (x,y),"up": (x,h-y),"left": (h-y,x),"right": (y,x)}
+                drawing_style = {"down": (x,y),"up": (x,h-y),"left": (h-y,w-x),"right": (y,w-x)}
                 img.put(colors[ord(pattern[y//scale][x//scale])-97], drawing_style[rotation])
     return img
 def make_room():
@@ -455,7 +456,7 @@ def sprite_animation(direction):
     else:
         current_player_sprite = (direction, (current_player_sprite[1]+1)%4)
         canvas.itemconfig(player, image=player_sprite_list[direction][current_player_sprite[1]])
-        
+
 movement_locked = 0
 move_distance = 12
 def update_player():
@@ -483,10 +484,19 @@ def update_player():
         canvas.itemconfig(player, image=player_sprite_list[current_player_sprite[0]][0])
     if movement_locked != 0:
         movement_locked -= 1
+        current_player_sprite = (current_player_sprite[0], 1)
+        canvas.itemconfig(player, image=player_sprite_list[current_player_sprite[0]][1])
 
 def reset(event):
     canvas.delete("all")
     start()
+
+def change_run(event, starting):
+    global move_distance
+    if bool(starting):
+        move_distance = 24
+    else:
+        move_distance = 12
 
 def attack(event):
     global movement_locked
@@ -494,29 +504,38 @@ def attack(event):
         return
     movement_locked = 3
     player_pos = canvas.bbox(player)
-    print(player_pos) #debug
-    if current_player_sprite[0] == "up": #:down_arrow: START WORK HERE ----------------------------------------------------------------------------------------------------------
-        attack = canvas.create_image(player_pos[0], player_pos[1], image=attack_sprite_up, anchor = "center")
+    if current_player_sprite[0] == "up":
+        attack = canvas.create_image(player_pos[0]-24, player_pos[1]+47, image=attack_sprite_up, anchor = "sw")
     elif current_player_sprite[0] == "down":
-        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_down, anchor = "center")
+        attack = canvas.create_image(player_pos[0]-24, player_pos[3]-60, image=attack_sprite_down, anchor = "nw")
     elif current_player_sprite[0] == "left":
-        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_left, anchor = "center")
-    else: #right
-        attack = canvas.create_image(WIDTH//2, HEIGHT//2, image=attack_sprite_right, anchor = "center")
+        attack = canvas.create_image(player_pos[0]+11, player_pos[1]+59, image=attack_sprite_left, anchor = "ne")
+    else:
+        attack = canvas.create_image(player_pos[2]-12, player_pos[1]+59, image=attack_sprite_right, anchor = "nw")
 
 root.bind("w", lambda event: change_movement(event, 'up', 1))
+root.bind("W", lambda event: change_movement(event, 'up', 1))
 root.bind("s", lambda event: change_movement(event, 'down', 1))
+root.bind("S", lambda event: change_movement(event, 'down', 1))
 root.bind("d", lambda event: change_movement(event, 'right', 1))
+root.bind("D", lambda event: change_movement(event, 'right', 1))
 root.bind("a", lambda event: change_movement(event, 'left', 1))
+root.bind("A", lambda event: change_movement(event, 'left', 1))
 root.bind("<KeyRelease-w>", lambda event: change_movement(event, 'up', 0))
+root.bind("<KeyRelease-W>", lambda event: change_movement(event, 'up', 0))
 root.bind("<KeyRelease-s>", lambda event: change_movement(event, 'down', 0))
+root.bind("<KeyRelease-S>", lambda event: change_movement(event, 'down', 0))
 root.bind("<KeyRelease-d>", lambda event: change_movement(event, 'right', 0))
+root.bind("<KeyRelease-D>", lambda event: change_movement(event, 'right', 0))
 root.bind("<KeyRelease-a>", lambda event: change_movement(event, 'left', 0))
+root.bind("<KeyRelease-A>", lambda event: change_movement(event, 'left', 0))
+root.bind("<Shift_L>", lambda event: change_run(event, 1))
+root.bind("<KeyRelease-Shift_L>", lambda event: change_run(event, 0))
 root.bind("r", reset)
 root.bind("<space>", attack)
 
 
-delay = 80
+delay = 800
 timer = 0
 def game_loop():
     global timer
@@ -531,7 +550,7 @@ def start():
     global player, room
     room = canvas.create_image(0, 0, image=room_img, anchor = 'nw')
     player = canvas.create_image(420, 240, image=player_sprite_list["down"][0], anchor = 'nw')
-    
+
 start()
 game_loop()
 root.mainloop()
