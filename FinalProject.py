@@ -548,9 +548,9 @@ root.bind("<KeyRelease-Shift_L>", lambda event: change_run(event, 0))
 root.bind("r", reset)
 root.bind("<space>", attack)
 
-spawn_locations = ((2*scale, HEIGHT-3*scale), (scale*4, scale*4), (WIDTH//2, HEIGHT//2))
+spawn_locations = ((2*scale, HEIGHT-3*scale), (scale*4, scale*4))
 enemies = []
-spawn = spawn_locations[random.randint(0,2)]
+spawn = spawn_locations[random.randint(0,len(spawn_locations)-1)]
 def spawn_enemies(ticks_passed):
     global spawn, enemies
     chance_for_spawn = 10-ticks_passed
@@ -558,7 +558,7 @@ def spawn_enemies(ticks_passed):
         chance_for_spawn = 0
     if random.randint(0, chance_for_spawn) == 0:
         if random.randint(1, 4) == 1:
-            spawn = spawn_locations[random.randint(0,2)]
+            spawn = spawn_locations[random.randint(0,len(spawn_locations)-1)]
         enemy = canvas.create_image(spawn[0], spawn[1], image=enemy_img, anchor = 'nw')
         enemies.append(enemy)
         print("spawned enemy")
@@ -571,22 +571,27 @@ def move_enemies():
         movement_y = [-1, 0, 1] #up, none, down
         if player_pos[0]>enemy_pos[2]: #if left of player
             movement_x.append(1)
+            movement_x.append(1)
         elif player_pos[2]<enemy_pos[0]: #if not, if right
+            movement_x.append(-1)
             movement_x.append(-1)
         if player_pos[1]>enemy_pos[3]: #if above player
             movement_y.append(1)
+            movement_y.append(1)
         elif player_pos[3]<enemy_pos[1]: #if not, if below
             movement_y.append(-1)
-        moves = (movement_x[random.randint(0,len(movement_x))], movement_y[random.randint(0,len(movement_y))])
+            movement_y.append(-1)
+        moves = (movement_x[random.randint(0,len(movement_x)-1)], movement_y[random.randint(0,len(movement_y)-1)])
         while True:
             predicted_x = enemy_pos[0] + moves[0]*scale
             predicted_y = enemy_pos[1] + moves[1]*scale
             if predicted_x<scale*2 or predicted_x>WIDTH-scale*3: #if outside of X range
-                moves = (movement_x[random.randint(0,len(movement_x))], moves[1]) #reroll X
-            elif predicted_y<scale*2 or predicted_y>HEIGHT-scale*3: #then if outside of Y range
-                moves = (moves[0], movement_y[random.randint(0,len(movement_y))]) #reroll Y
+                moves = (movement_x[random.randint(0,len(movement_x)-1)], moves[1]) #reroll X
+            elif predicted_y<scale*3 or predicted_y>HEIGHT-scale*3: #then if outside of Y range
+                moves = (moves[0], movement_y[random.randint(0,len(movement_y)-1)]) #reroll Y
             else:
                 canvas.move(enemy, moves[0]*scale, moves[1]*scale)
+                break
 
                 
 
