@@ -466,10 +466,12 @@ def sprite_animation(direction):
 movement_locked = 0
 move_distance = scale
 stamina = 100
+running = False
 def update_player():
-    global current_player_sprite, movement_locked, stamina
-    if stamina <= 100-4:
-        stamina += 4
+    global current_player_sprite, movement_locked, stamina, running
+    running = False
+    if stamina <= 100-2:
+        stamina += 2
     player_pos = canvas.bbox(player)
     moved = {"horizontally": False, "vertically": False}
     predicted_x = player_pos[0] + (movement['right']-movement['left'])*move_distance
@@ -481,7 +483,8 @@ def update_player():
         canvas.move(player, 0, (movement['down'] - movement['up'])*move_distance) #moves the player vertically
         moved["vertically"] = True #states the player has possibly moved vertically
     if ((moved["horizontally"] and movement['right']-movement['left'] != 0) or (moved["vertically"] and movement['down']-movement['up'] != 0)) and move_distance == 24:
-        stamina -= 8 #Above is the check to make sure the player is moving and running
+        stamina -= 12 #Above is the check to make sure the player is moving and running
+        running = True
         if stamina <= 0: #If stam hits 0 from above drain, lock movement for 10 frames
             movement_locked = 10
     if movement['right']-movement['left'] == 1 and moved["horizontally"] == True: #moving right
@@ -500,10 +503,6 @@ def update_player():
         current_player_sprite = (current_player_sprite[0], 1)
         canvas.itemconfig(player, image=player_sprite_list[current_player_sprite[0]][1])
 
-def reset(event):
-    canvas.delete("all")
-    start()
-
 def change_run(event, starting):
     global move_distance
     if bool(starting):
@@ -511,7 +510,8 @@ def change_run(event, starting):
     else:
         move_distance = scale
 
-def attack(event):
+attack = 0
+def use_attack(event):
     global movement_locked, attack
     if movement_locked != 0:
         return
@@ -545,23 +545,45 @@ root.bind("<KeyRelease-a>", lambda event: change_movement(event, 'left', 0))
 root.bind("<KeyRelease-A>", lambda event: change_movement(event, 'left', 0))
 root.bind("<Shift_L>", lambda event: change_run(event, 1))
 root.bind("<KeyRelease-Shift_L>", lambda event: change_run(event, 0))
-root.bind("r", reset)
-root.bind("<space>", attack)
+root.bind("<space>", use_attack)
 
-spawn_locations = ((2*scale, HEIGHT-3*scale), (scale*4, scale*4))
+score = 0
+level = 0
+def collision(a, b):
+    ax1, ay1, ax2, ay2 = canvas.bbox(a)
+    bx1, by1, bx2, by2 = canvas.bbox(b)
+    return ax1<bx2 and ax2>bx1 and ay1<by2 and ay2>by1
+def check_collisions():
+    global enemies, attack, player, score
+    for enemy in enemies:
+        if attack != 0:
+            if collision(enemy, attack):
+                canvas.delete(enemy)
+                if enemy in enemies:
+                    enemies.remove(enemy)
+                    score += 10-level
+        elif collision(enemy, player):
+            if running:
+                canvas.delete(enemy)
+                if enemy in enemies:
+                    enemies.remove(enemy)
+                    score += 10-level
+            else:
+                score -= 1
+
+spawn_locations = ((2*scale, HEIGHT-3*scale), (scale*2, scale*3), (WIDTH-10*scale, 16*scale), (WIDTH-23*scale, 13*scale))
 enemies = []
 spawn = spawn_locations[random.randint(0,len(spawn_locations)-1)]
-def spawn_enemies(ticks_passed):
+def spawn_enemies():
     global spawn, enemies
-    chance_for_spawn = 10-ticks_passed
+    chance_for_spawn = 10-level*2
     if chance_for_spawn <= 0:
         chance_for_spawn = 0
-    if random.randint(0, chance_for_spawn) == 0:
+    if random.randint(0, chance_for_spawn) == 0 and len(enemies) <= 40:
         if random.randint(1, 4) == 1:
             spawn = spawn_locations[random.randint(0,len(spawn_locations)-1)]
         enemy = canvas.create_image(spawn[0], spawn[1], image=enemy_img, anchor = 'nw')
         enemies.append(enemy)
-        print("spawned enemy")
 
 def move_enemies():
     for enemy in enemies:
@@ -592,26 +614,35 @@ def move_enemies():
             else:
                 canvas.move(enemy, moves[0]*scale, moves[1]*scale)
                 break
-
-                
-
-
+            
+level = 0
 delay = 80
 timer = 0
 spawn_timer = 0
-spawn_delay = 500 #ms
+spawn_delay = 200 #ms
 def game_loop():
-    global timer, spawn_timer
+    global timer, spawn_timer, attack, score, level, enemies, spawn_delay
+    if score <= 0:
+        score = 0
+    if score >= 100:
+        print("LEVELD UP!!!")
+        score = 0
+        level += 1
+        spawn_delay = 200-10*level
+        for enemy in enemies:
+            canvas.delete(enemy)
+        enemies = []
     timer += delay
     spawn_timer += delay
     if spawn_timer > spawn_delay:
         spawn_timer -= spawn_delay
-        spawn_enemies(timer//2000)
+        spawn_enemies()
     move_enemies() #move all enemies
-    #check_collisions() #check out new collisions
     update_player()
-    if movement_locked == 0:
+    check_collisions() #check out new collisions
+    if movement_locked == 0 and attack != 0:
         canvas.delete(attack)
+        attack = 0
     canvas.coords(stamina_bar, 84, 10, 84+stamina*2, 26) #Updates stam bar
     root.after(delay, game_loop) #every [delay], run game_loop
 
