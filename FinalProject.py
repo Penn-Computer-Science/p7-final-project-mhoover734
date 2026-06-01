@@ -4,7 +4,7 @@ import random
 WIDTH = 900
 HEIGHT = 600
 root = tk.Tk()
-root.title("\"Game\"")
+root.title("Survive.")
 canvas = tk.Canvas(root, width=WIDTH, height=HEIGHT, bg="white")
 canvas.pack()
 scale = 12
@@ -639,7 +639,7 @@ def game_loop():
         spawn_enemies()
     move_enemies() #move all enemies
     update_player()
-    check_collisions() #check out new collisions
+    check_collisions() #check new collisions
     if movement_locked == 0 and attack != 0:
         canvas.delete(attack)
         attack = 0
