@@ -1,9 +1,10 @@
-Game where you survive fire ants invading your room
+Game where you survive "fire ants" (red squares, use your imagination) invading your room
 
 CONTROLS:
-Space to attack in front of you       \ both of these
-Shift to run (2x speed, unhurtable)   / kill enemies
+Space to attack in front of you
+Shift to run (2x speed, unhurtable)
 WASD to move
 
-Levels are displayed in Terminal because I didn't have time to finish the GUI
-finished GUI would include a score bar and a level counter
+Both attacking and running kill enemies, but attacking gives x2 points, and in level 9, it's the only one to actually deal damage
+Level 10 is the final level and you can no longer get score (also the enemy cap is 500 compared to 9's 90)
+good luck on lvl 9, it's hard

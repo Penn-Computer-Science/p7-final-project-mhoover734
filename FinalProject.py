@@ -1,17 +1,19 @@
 import tkinter as tk
 import random
 
-WIDTH = 900
+# INITIALIZING SOME VARIABLES
+WIDTH = 900 #Canvas width & height
 HEIGHT = 600
 root = tk.Tk()
-root.title("Survive.")
+root.title("Room Service")
 canvas = tk.Canvas(root, width=WIDTH, height=HEIGHT, bg="white")
 canvas.pack()
 scale = 12
 
+# DRAWING SPRITES
                        # 0 Nothing
 colors = ["#000000", # a Hair & pants
-          "#4e216b", # b Hoodie & highlights
+          "#4e216b", # b Hoodie & highlights    (a-e) and (l) are used in attack
           "#6f3198", # c Inner sleeve
           "#764099", # d Outer sleeve
           "#8a5cab", # e Hoodie trim
@@ -23,6 +25,7 @@ colors = ["#000000", # a Hair & pants
           "#ba9e8d", # k Shaded skin
           "#cc93cc"] # l Eye color
 
+#General function for drawing sprites, used for every character sprite
 def draw_pattern(pattern, scale):
     h = len(pattern)*scale
     w = len(pattern[0])*scale
@@ -32,7 +35,7 @@ def draw_pattern(pattern, scale):
             if pattern[y//scale][x//scale] != "0":
                 img.put(colors[ord(pattern[y//scale][x//scale])-97], (x,y))
     return img
-
+#Drawing the character sprites
 def make_up_0():
     pattern = [
         "000000000",
@@ -333,6 +336,7 @@ def make_left_2():
         "0000gg000",
         "000000000"]
     return draw_pattern(pattern, 12)
+#Drawing other (non-character-sprite-colors) sprites - attack, room, and enemy
 def make_attack(rotation):
     pattern = [
         "0b000000000",
@@ -344,15 +348,15 @@ def make_attack(rotation):
         "000cddeel00"]
     h = len(pattern)*scale
     w = len(pattern[0])*scale
-    if rotation in ("up", "down"):
+    if rotation in ("up", "down"): #Given input of location, it'll switch between horizontal bounds (132*84)...
         img = tk.PhotoImage(width=len(pattern[0])*scale, height=len(pattern)*scale)
-    else:
+    else: #...and horizonatal bounds (84*132)
         img = tk.PhotoImage(width=len(pattern)*scale, height=len(pattern[0])*scale)
     for y in range(len(pattern)*scale):
         for x in range(len(pattern[0])*scale):
-            if pattern[y//scale][x//scale] != "0":
-                drawing_style = {"down": (x,y),"up": (x,h-y),"left": (h-y,w-x),"right": (y,w-x)}
-                img.put(colors[ord(pattern[y//scale][x//scale])-97], drawing_style[rotation])
+            if pattern[y//scale][x//scale] != "0": #If the number at that location isn't 0 (pixel should be placed)
+                drawing_style = {"down": (x,y),"up": (x,h-y),"left": (h-y,w-x),"right": (y,w-x)} #Drawing style depends on rotation, tells if to flip image at all and whatnot
+                img.put(colors[ord(pattern[y//scale][x//scale])-97], drawing_style[rotation]) #Finally, places the pixel in the right location depending on rotation of attack
     return img
 def make_room():
     pattern = [
@@ -426,37 +430,38 @@ def make_room():
             img.put(room_colors[int(pattern[y//scale][x//scale])], (x,y))
     return img
 def make_enemy():
-    img = tk.PhotoImage(width=scale, height=scale)
-    for y in range(scale):
+    img = tk.PhotoImage(width=scale, height=scale) #this is stupid lol why did I do this its literally a square
+    for y in range(scale): #Im way too lazy to bother fixing it into being a rectangle now lmao (also no time)
         for x in range(scale):
             img.put("#FF0000", (x,y))
     return img
     
-
+# INITIALIZING SPRITES
+#Other sprites
 attack_sprite_up=make_attack("up")
 attack_sprite_down=make_attack("down")
 attack_sprite_left=make_attack("left")
 attack_sprite_right=make_attack("right")
 room_img=make_room()
 enemy_img=make_enemy()
-
-current_player_sprite = ("down", 2)
+#Player sprites
+current_player_sprite = ("down", 2) #Sprite list and current sprite info for animation work
 player_sprite_list = {"up": (make_up_0(), make_up_1(), make_up_0(), make_up_2()),
                       "down": (make_down_0(), make_down_1(), make_down_0(), make_down_2()),
                       "right": (make_right_0(), make_right_1(), make_right_0(), make_right_2()),
                       "left": (make_left_0(), make_left_1(), make_left_0(), make_left_2())}
 
+# KEYBINDING
+#Variables for key presses, 1 in up means 'w' is being pressed, 0 means its released
 movement = {'up': 0,'down': 0,'right': 0,'left': 0}
-
-
-def change_movement(event, direction, state):
+#Function used for WASD to make it so holding it doesn't do the weird w.. w.. w. w. wwwwwwwww thing (iykyk)
+def change_movement(event, direction_pressed, state):
     global movement
-    movement[direction] = state
-
-
-def sprite_animation(direction):
+    movement[direction_pressed] = state
+#Entirety of sprite animation basically
+def sprite_animation(direction): #Input the direction character is moving
     global current_player_sprite
-    if current_player_sprite[0] != direction:
+    if current_player_sprite[0] != direction: #If the direction moving isn't 
         current_player_sprite = (direction, 0)
         canvas.itemconfig(player, image=player_sprite_list[direction][0])
     else:
@@ -483,7 +488,7 @@ def update_player():
         canvas.move(player, 0, (movement['down'] - movement['up'])*move_distance) #moves the player vertically
         moved["vertically"] = True #states the player has possibly moved vertically
     if ((moved["horizontally"] and movement['right']-movement['left'] != 0) or (moved["vertically"] and movement['down']-movement['up'] != 0)) and move_distance == 24:
-        stamina -= 12 #Above is the check to make sure the player is moving and running
+        stamina -= 10 #Above is the check to make sure the player is moving and running
         running = True
         if stamina <= 0: #If stam hits 0 from above drain, lock movement for 10 frames
             movement_locked = 10
@@ -567,7 +572,7 @@ def check_collisions():
                 canvas.delete(enemy)
                 if enemy in enemies:
                     enemies.remove(enemy)
-                    score += 10-level
+                    score += (10-level)//2
             else:
                 score -= 1
 
@@ -579,7 +584,10 @@ def spawn_enemies():
     chance_for_spawn = 10-level*2
     if chance_for_spawn <= 0:
         chance_for_spawn = 0
-    if random.randint(0, chance_for_spawn) == 0 and len(enemies) <= 40:
+    spawn_limit = 10*level
+    if level == 10:
+        spawn_limit = 500
+    if random.randint(0, chance_for_spawn) == 0 and len(enemies) <= spawn_limit or len(enemies) == 0:
         if random.randint(1, 4) == 1:
             spawn = spawn_locations[random.randint(0,len(spawn_locations)-1)]
         enemy = canvas.create_image(spawn[0], spawn[1], image=enemy_img, anchor = 'nw')
@@ -615,19 +623,17 @@ def move_enemies():
                 canvas.move(enemy, moves[0]*scale, moves[1]*scale)
                 break
             
-level = 0
 delay = 80
 timer = 0
 spawn_timer = 0
 spawn_delay = 200 #ms
 def game_loop():
-    global timer, spawn_timer, attack, score, level, enemies, spawn_delay
-    if score <= 0:
-        score = 0
+    global timer, spawn_timer, attack, score, level, enemies, spawn_delay, level_label
     if score >= 100:
         print("LEVELD UP!!!")
         score = 0
         level += 1
+        canvas.itemconfig(level_label, text="Level "+str(level))
         spawn_delay = 200-10*level
         for enemy in enemies:
             canvas.delete(enemy)
@@ -640,19 +646,27 @@ def game_loop():
     move_enemies() #move all enemies
     update_player()
     check_collisions() #check new collisions
+    if score <= 0:
+        score = 0
     if movement_locked == 0 and attack != 0:
         canvas.delete(attack)
         attack = 0
-    canvas.coords(stamina_bar, 84, 10, 84+stamina*2, 26) #Updates stam bar
+    canvas.coords(stamina_bar, 90, 11, 90+stamina*2, 25) #Updates stam bar
+    canvas.coords(score_bar, WIDTH-294, 11, WIDTH-294+score*2, 25)
     root.after(delay, game_loop) #every [delay], run game_loop
 
 
 def start():
-    global player, stamina_bar
+    global player, stamina_bar, score_bar, level_label
     room = canvas.create_image(0, 0, image=room_img, anchor = 'nw')
     player = canvas.create_image(WIDTH//2-scale*3.5, HEIGHT//2-scale*5, image=player_sprite_list["down"][0], anchor = 'nw')
-    stamina_label = canvas.create_text(26, 18, text="Stamina:", fill="white", anchor = "w")
-    stamina_bar = canvas.create_rectangle(84, 10, 84+stamina*2, 26, fill="blue")
+    stamina_label = canvas.create_text(24, 18, text="Stamina:", fill="white", anchor = "w", font=("Arial", 10, "bold"))
+    stamina_background = canvas.create_rectangle(90, 11, 290, 25, fill="#424242")
+    stamina_bar = canvas.create_rectangle(90, 11, 290, 25, fill="#8a5cab")
+    score_label = canvas.create_text(WIDTH-304, 18, text="Score:", fill="white", anchor = "e", font=("Arial", 10, "bold"))
+    score_background = canvas.create_rectangle(WIDTH-294, 11, WIDTH-94, 25, fill="#424242")
+    score_bar = canvas.create_rectangle(WIDTH-294, 11, WIDTH-294, 25, fill="#FF0000")
+    level_label = canvas.create_text(WIDTH-24, 18, text="Level 0", fill="white", anchor = "e", font=("Arial", 10, "bold"))
 start()
 game_loop()
 root.mainloop()
